@@ -1,0 +1,18 @@
+[package]
+name = "configurr"
+version = "1.0.0"
+edition = "2021"
+authors = ["Protryon <max.bruce12@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/protryon/configurr"
+description = "Simple k8s watcher to copy a file into a configmap"
+keywords = [ "k8s", "kube", "configmap" ]
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+kube = { version = "0.84.0", features = ["runtime", "derive"] }
+k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
+really-notify = "0.1"
+log = "0.4"
+env_logger = "0.10"
+anyhow = "1.0"

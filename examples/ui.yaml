@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ui
+  namespace: wg
+  labels:
+    app: ui
+spec:
+  serviceName: ui
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      serviceAccountName: wg-ui
+      containers:
+      - name: ui
+        image: ngoduykhanh/wireguard-ui:0.5.2
+        ports:
+        - containerPort: 80
+          protocol: TCP
+          name: ui
+        env:
+        - name: WGUI_USERNAME
+          value: XXXXX
+        - name: WGUI_PASSWORD
+          value: XXXXX
+        - name: BASE_PATH
+          value: /wg
+        - name: SESSION_SECRET
+          value: XXXXX
+        - name: WGUI_ENDPOINT_ADDRESS
+          value: XXXXX
+        - name: WGUI_SERVER_INTERFACE_ADDRESSES
+          value: "192.168.250.0/24,2001:db8:60:1::0/48"
+        - name: WGUI_DEFAULT_CLIENT_ALLOWED_IPS
+          value: "0.0.0.0/0,::/0"
+        - name: WGUI_SERVER_LISTEN_PORT
+          value: "51850"
+        - name: WGUI_SERVER_POST_UP_SCRIPT
+          value: "iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE; ip6tables -t nat -I POSTROUTING -o eth0 -j MASQUERADE; sysctl -w net.ipv4.ip_forward=1; sysctl -w net.ipv6.conf.all.forwarding=1"
+        - name: WGUI_SERVER_POST_DOWN_SCRIPT
+          value: "iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; ip6tables -t nat -D POSTROUTING -o eth0 -j MASQUERADE"
+        - name: WGUI_DNS
+          value: 8.8.8.8
+        - name: BIND_ADDRESS
+          value: 0.0.0.0:80
+        volumeMounts:
+          - name: ui-db
+            mountPath: /app/db
+          - name: ui-wg
+            mountPath: /etc/wireguard
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 100m
+          limits:
+            memory: 256Mi
+            cpu: 1.0
+      - name: configurr
+        image: protryon/configurr:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: MAP_NAME
+          value: wg
+        - name: MAP_FILENAME
+          value: wg0.conf
+        - name: TARGET_FILE
+          value: /etc/wireguard/wg0.conf
+        volumeMounts:
+          - name: ui-wg
+            mountPath: /etc/wireguard
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 25m
+          limits:
+            memory: 64Mi
+            cpu: 100m
+      volumes:
+      - name: ui-db
+        persistentVolumeClaim:
+          claimName: ui-db
+      - name: ui-wg
+        persistentVolumeClaim:
+          claimName: ui-wg
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ui-db
+  namespace: wg
+  labels:
+    app: ui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ui-wg
+  namespace: wg
+  labels:
+    app: ui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+  namespace: wg
+  labels:
+    app: ui
+spec:
+  selector:
+    app: ui
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wg
+  namespace: wg
+  labels:
+    app: wg

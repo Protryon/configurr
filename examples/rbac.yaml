@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: ui
+  name: wg-ui
+  namespace: wg
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: wg
+  name: wg-ui
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: wg-ui
+  namespace: wg
+subjects:
+- kind: ServiceAccount
+  name: wg-ui
+  namespace: wg
+roleRef:
+  kind: Role
+  name: wg-ui
+  apiGroup: rbac.authorization.k8s.io
