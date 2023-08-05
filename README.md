@@ -14,3 +14,5 @@ I really wanted [wireguard-ui](https://github.com/ngoduykhanh/wireguard-ui/tree/
 ## Example Deployment
 
 Check out the `examples` dir for a deployment example.
+
+The docker image is publicly published at `protryon/configurr:1.0.0`.
